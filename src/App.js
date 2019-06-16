@@ -6,44 +6,55 @@ import {createComponent, useStore} from 'effector-react'
 const addTodo = createEvent('add-todo');
 const removeTodo = createEvent('remove-todo');
 const addTodoTitle = createEvent('add-todo-title');
+const toggleComplit = createEvent('toggle-complit');
+const setFilter = createEvent('set-filter');
 
 const todos = createStore([])
   .on(addTodo, (state, todo) => [...state, todo])
-  .on(removeTodo, (state, id) => [...state.filter(todo => todo.id !== id)]);
+  .on(removeTodo, (state, id) => [...state.filter(todo => todo.id !== id)])
+  .on(toggleComplit, (state, id) => [...state.map(todo => {
+    if (todo.id === id) {
+      todo.complite = !todo.complite;
+    }
+    return todo;
+  })]);
 
 const title = createStore('')
   .on(addTodoTitle, (_, value) => value);
 
-const data = createStoreObject({todos, title});
+const filter = createStore('all')
+  .on(setFilter, (_, value) => value);
 
-addTodo.watch((todo, eventName) => {
-  console.log(eventName);
-  console.log(todo);
-});
-removeTodo.watch((todo, eventName) => {
-  console.log(eventName);
-  console.log(todo);
-});
-addTodoTitle.watch((value, eventName) => {
+const data = createStoreObject({todos, title, filter});
+
+const logging = (value, eventName) => {
   console.log(eventName);
   console.log(value);
-});
+};
+addTodo.watch(logging);
+removeTodo.watch(logging);
+addTodoTitle.watch(logging);
+toggleComplit.watch(logging);
+setFilter.watch(logging);
 
 
 const TodoList = () => {
-  const {todos} = useStore(data);
+  const {todos, filter} = useStore(data);
+  const todosTemp = filter === 'all' ?
+    [...todos] : filter === 'not' ?
+      todos.filter( todo => !todo.complite) : todos.filter( todo => todo.complite);
   return (
-    todos.map(todo => (
-        <div className={'todo'} key={todo.id}>
+    todosTemp.map(todo => (
+        <div className={'todo'} key={todo.id} onClick={() => toggleComplit(todo.id)}>
           <button className={'remove-todo'} onClick={() => removeTodo(todo.id)}>X</button>
-          {todo.title}
+          <span className={todo.complite ? 'complite' : ''}>{todo.title}</span>
         </div>
       )
     )
   )
 };
 
-const getId = () => Math.round(Math.random() * 10000000);
+const getId = () => Date.now();
 
 const changeValue = (e) => {
   addTodoTitle(e.target.value);
@@ -52,7 +63,7 @@ const handlerAddTodo = (title) => {
   if (title.trim() === '') {
     return;
   }
-  addTodo({ title, id: getId() });
+  addTodo({ title, id: getId(), complite: false });
   addTodoTitle('');
 }
 
@@ -65,8 +76,11 @@ function App() {
       </header>
       <div>
         <input type="text" onChange={changeValue} value={title}/>
-        <button onClick={() => handlerAddTodo(title)}>+</button>
+        <button onClick={() => handlerAddTodo(title)}>add</button>
       </div>
+      <button onClick={() => setFilter('all')}>all</button>
+      <button onClick={() => setFilter('complite')}>complite</button>
+      <button onClick={() => setFilter('not')}>notcompite</button>
       <TodoList />
     </div>
   );
