@@ -1,0 +1,26 @@
+.App {
+  text-align: center;
+}
+
+.App-header {
+  background-color: #282c34;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.todo {
+  position: relative;
+  width: 500px;
+  padding: 10px;
+  border: 1px solid #282c34;
+  margin: 5px;
+}
+.remove-todo {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
